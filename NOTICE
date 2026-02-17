@@ -1,0 +1,18 @@
+TabPFN-v2-JAX
+Copyright 2025 Chen Wang
+
+Built with PriorLabs-TabPFN
+
+This project is a derivative work of TabPFN by Prior Labs GmbH.
+Original repository: https://github.com/PriorLabs/TabPFN
+Original copyright: Copyright (c) Prior Labs GmbH 2025
+Original license: Prior Labs License (Apache 2.0 with Additional Provision)
+
+This JAX implementation was developed with the assistance of Antigravity,
+an AI coding agent by Google DeepMind.
+
+---
+
+The original TabPFN project is licensed under the Prior Labs License
+(Apache 2.0 with Additional Provision), Version 1.2, Dec 2025.
+A copy of the license is included in the LICENSE file.
