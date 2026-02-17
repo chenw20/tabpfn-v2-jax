@@ -7,7 +7,7 @@ from abc import abstractmethod
 from typing_extensions import TypeAlias
 
 import numpy as np
-import torch
+
 
 from tabpfn.preprocessing.datamodel import FeatureModality, FeatureSchema
 
@@ -33,9 +33,9 @@ class PreprocessingStepResult:
             is provided.
     """
 
-    X: np.ndarray | torch.Tensor
+    X: np.ndarray
     feature_schema: FeatureSchema
-    X_added: np.ndarray | torch.Tensor | None = None
+    X_added: np.ndarray | None = None
     modality_added: FeatureModality | None = None
 
     def __post_init__(self) -> None:
@@ -53,7 +53,7 @@ class PreprocessingPipelineResult:
         feature_schema: Updated feature schema (may have new columns added).
     """
 
-    X: np.ndarray | torch.Tensor
+    X: np.ndarray
     feature_schema: FeatureSchema
 
 
@@ -242,7 +242,7 @@ class PreprocessingPipeline:
 
     def fit_transform(
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
     ) -> PreprocessingPipelineResult:
         """Fit and transform the data using the pipeline.
@@ -259,7 +259,7 @@ class PreprocessingPipeline:
         self.final_feature_schema_ = feature_schema
         return PreprocessingPipelineResult(X=X, feature_schema=feature_schema)
 
-    def transform(self, X: np.ndarray | torch.Tensor) -> PreprocessingPipelineResult:
+    def transform(self, X: np.ndarray) -> PreprocessingPipelineResult:
         """Transform the data using the fitted pipeline.
 
         Args:
@@ -280,11 +280,11 @@ class PreprocessingPipeline:
 
     def _process_steps(
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
         *,
         is_fitting: bool,
-    ) -> tuple[np.ndarray | torch.Tensor, FeatureSchema]:
+    ) -> tuple[np.ndarray, FeatureSchema]:
         """Process all pipeline steps.
 
         Args:
@@ -297,7 +297,7 @@ class PreprocessingPipeline:
         """
         # Single copy to preserve immutability for the caller, avoiding N copies
         # inside the loop for steps that target specific modalities.
-        X = X.copy() if isinstance(X, np.ndarray) else X.clone()
+        X = X.copy()
 
         for step, modalities in self.steps:
             if modalities:
@@ -350,17 +350,16 @@ class PreprocessingPipeline:
 
     def _maybe_append_added_columns(
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
         result: PreprocessingStepResult,
-    ) -> tuple[np.ndarray | torch.Tensor, FeatureSchema]:
+    ) -> tuple[np.ndarray, FeatureSchema]:
         """Append added columns from a step result and update schema."""
         if result.X_added is not None:
             if isinstance(X, np.ndarray):
                 X = np.concatenate([X, result.X_added], axis=1)
             else:
-                assert isinstance(result.X_added, torch.Tensor)
-                X = torch.cat([X, result.X_added], dim=1)
+                raise ValueError("Only numpy arrays supported")
             feature_schema = feature_schema.append_columns(
                 result.modality_added or FeatureModality.NUMERICAL,
                 result.X_added.shape[1],

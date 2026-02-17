@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing_extensions import override
 
-import torch
+import numpy as np
 
 from tabpfn.preprocessing.pipeline_interface import (
     PreprocessingStep,
@@ -21,23 +21,22 @@ class DifferentiableZNormStep(PreprocessingStep):
     def __init__(self):
         super().__init__()
 
-        self.means = torch.tensor([])
-        self.stds = torch.tensor([])
+        self.means = np.array([])
+        self.stds = np.array([])
 
     @override
     def _fit(  # type: ignore
         self,
-        X: torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
     ) -> FeatureSchema:
-        self.means = X.mean(dim=0, keepdim=True)
-        self.stds = X.std(dim=0, keepdim=True)
+        self.means = X.mean(axis=0, keepdims=True)
+        self.stds = X.std(axis=0, keepdims=True)
         return feature_schema
 
-    @override
-    def _transform(  # type: ignore
-        self, X: torch.Tensor, *, is_test: bool = False
-    ) -> tuple[torch.Tensor, None, None]:
+    def _transform(
+        self, X: np.ndarray, *, is_test: bool = False
+    ) -> tuple[np.ndarray, None, None]:
         assert X.shape[1] == self.means.shape[1]
         assert X.shape[1] == self.stds.shape[1]
         return (X - self.means) / self.stds, None, None

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal
 from typing_extensions import override
 
 import numpy as np
-import torch
+
 
 from tabpfn.preprocessing.pipeline_interface import (
     PreprocessingStep,
@@ -36,7 +36,7 @@ class ShuffleFeaturesStep(PreprocessingStep):
     @override
     def _fit(
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
     ) -> FeatureSchema:
         _, rng = infer_random_state(self.random_state)
@@ -51,10 +51,7 @@ class ShuffleFeaturesStep(PreprocessingStep):
             index_permutation = np.arange(X.shape[1]).tolist()
         else:
             raise ValueError(f"Unknown shuffle method {self.shuffle_method}")
-        if isinstance(X, torch.Tensor):
-            self.index_permutation_ = torch.tensor(index_permutation, dtype=torch.long)
-        else:
-            self.index_permutation_ = index_permutation
+        self.index_permutation_ = index_permutation
 
         return feature_schema.apply_permutation(index_permutation)
 

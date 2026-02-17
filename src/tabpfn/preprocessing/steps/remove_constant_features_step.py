@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from typing_extensions import override
 
 import numpy as np
-import torch
+
 
 from tabpfn.errors import TabPFNValidationError
 from tabpfn.preprocessing.pipeline_interface import (
@@ -27,12 +27,11 @@ class RemoveConstantFeaturesStep(PreprocessingStep):
     @override
     def _fit(  # type: ignore
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
     ) -> FeatureSchema:
-        if isinstance(X, torch.Tensor):
-            sel_ = torch.max(X[0:1, :] != X, dim=0)[0].cpu()
-        else:
+        if True:
+            # Only use numpy path
             sel_ = ((X[0:1, :] == X).mean(axis=0) < 1.0).tolist()
 
         if not any(sel_):
@@ -48,7 +47,7 @@ class RemoveConstantFeaturesStep(PreprocessingStep):
 
     @override
     def _transform(
-        self, X: np.ndarray | torch.Tensor, *, is_test: bool = False
+        self, X: np.ndarray, *, is_test: bool = False
     ) -> tuple[np.ndarray, np.ndarray | None, FeatureModality | None]:
         assert self.sel_ is not None, "You must call fit first"
         return X[:, self.sel_], None, None

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 import joblib
 import numpy as np
-import torch
+
 
 from tabpfn.constants import (
     PARALLEL_MODE_TO_RETURN_AS,
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
 
 def _fit_preprocessing_one(
     config: EnsembleConfig,
-    X_train: np.ndarray | torch.Tensor,
-    y_train: np.ndarray | torch.Tensor,
+    X_train: np.ndarray,
+    y_train: np.ndarray,
     random_state: int | np.random.Generator | None = None,
     *,
     feature_schema: FeatureSchema,
@@ -59,7 +59,7 @@ def _fit_preprocessing_one(
     if config.subsample_ix is not None:
         X_train = X_train[config.subsample_ix]
         y_train = y_train[config.subsample_ix]
-    if not isinstance(X_train, torch.Tensor):
+    if True:
         X_train = X_train.copy()
         y_train = y_train.copy()
 
@@ -78,7 +78,7 @@ def _fit_preprocessing_one(
 
 
 def _transform_labels_one(
-    config: EnsembleConfig, y_train: np.ndarray | torch.Tensor
+    config: EnsembleConfig, y_train: np.ndarray
 ) -> np.ndarray:
     """Transform the labels for one ensemble config.
         for both regression or classification.

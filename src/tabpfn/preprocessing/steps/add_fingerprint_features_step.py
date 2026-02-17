@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing_extensions import override
 
 import numpy as np
-import torch
+
 
 from tabpfn.preprocessing.datamodel import FeatureModality, FeatureSchema
 from tabpfn.preprocessing.pipeline_interface import (
@@ -49,12 +49,12 @@ class AddFingerprintFeaturesStep(PreprocessingStep):
 
     def __init__(self):
         super().__init__()
-        self.added_fingerprint: np.ndarray | torch.Tensor | None = None
+        self.added_fingerprint: np.ndarray | None = None
 
     @override
     def _fit(
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         feature_schema: FeatureSchema,
     ) -> FeatureSchema:
         # Store n_cells as a deterministic salt appended to every hash input.
@@ -66,12 +66,12 @@ class AddFingerprintFeaturesStep(PreprocessingStep):
         return feature_schema
 
     @override
-    def _transform(  # type: ignore
+    def _transform(
         self,
-        X: np.ndarray | torch.Tensor,
+        X: np.ndarray,
         *,
         is_test: bool = False,
-    ) -> tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor, FeatureModality]:
+    ) -> tuple[np.ndarray, np.ndarray, FeatureModality]:
         """Transform the input and compute fingerprint.
 
         Args:
@@ -81,7 +81,7 @@ class AddFingerprintFeaturesStep(PreprocessingStep):
         Returns:
             The input X unchanged. Fingerprint is available via _get_added_columns().
         """
-        X_det = X.detach().cpu().numpy() if isinstance(X, torch.Tensor) else X
+        X_det = X
 
         # Compute fingerprint hash for each row
         X_h = np.zeros(X.shape[0], dtype=X_det.dtype)
@@ -125,12 +125,7 @@ class AddFingerprintFeaturesStep(PreprocessingStep):
                 # Update counter so next identical row starts checking from new offset
                 hash_counter[h_base] = add_to_hash + 1
 
-        if isinstance(X, torch.Tensor):
-            added_fingerprint = (
-                torch.from_numpy(X_h).float().reshape(-1, 1).to(X.device)
-            )
-        else:
-            added_fingerprint = X_h.reshape(-1, 1)
+        added_fingerprint = X_h.reshape(-1, 1)
 
         return X, added_fingerprint, FeatureModality.NUMERICAL
 

@@ -6,7 +6,7 @@ import dataclasses
 import warnings
 from collections.abc import Iterable, Iterator, Sequence
 from itertools import chain, product, repeat
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar, Any
 
 import numpy as np
 
@@ -19,17 +19,13 @@ from tabpfn.preprocessing.configs import (
     EnsembleConfig,
     RegressorEnsembleConfig,
 )
-from tabpfn.preprocessing.torch import (
-    FeatureSchema,
-    TorchPreprocessingPipeline,
-    create_gpu_preprocessing_pipeline,
-)
+
 from tabpfn.preprocessing.transform import fit_preprocessing
 from tabpfn.utils import infer_random_state
 
 if TYPE_CHECKING:
     import numpy.typing as npt
-    import torch
+    import numpy.typing as npt
     from sklearn.base import TransformerMixin
     from sklearn.pipeline import Pipeline
 
@@ -49,14 +45,14 @@ class TabPFNEnsembleMember:
 
     config: EnsembleConfig
     cpu_preprocessor: PreprocessingPipeline
-    gpu_preprocessor: TorchPreprocessingPipeline | None
-    X_train: np.ndarray | torch.Tensor
-    y_train: np.ndarray | torch.Tensor
+    gpu_preprocessor: Any | None
+    X_train: np.ndarray
+    y_train: np.ndarray
     feature_schema: FeatureSchema
 
     def transform_X_test(
-        self, X: np.ndarray | torch.Tensor
-    ) -> np.ndarray | torch.Tensor:
+        self, X: np.ndarray
+    ) -> np.ndarray:
         """Transform the test data."""
         return self.cpu_preprocessor.transform(X).X
 
@@ -112,8 +108,8 @@ class TabPFNEnsemblePreprocessor:
 
     def fit_transform_ensemble_members_iterator(
         self,
-        X_train: np.ndarray | torch.Tensor,
-        y_train: np.ndarray | torch.Tensor,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
         feature_schema: FeatureSchema,
         parallel_mode: Literal["block", "as-ready", "in-order"],
         override_random_state: int | np.random.Generator | None = None,
@@ -131,11 +127,8 @@ class TabPFNEnsemblePreprocessor:
 
         gpu_preprocessors = []
         for config in self.configs:
-            gpu_preprocessor = create_gpu_preprocessing_pipeline(
-                config=config,
-                keep_fitted_cache=self.keep_fitted_cache,
-            )
-            gpu_preprocessors.append(gpu_preprocessor)
+            # GPU preprocessing removed
+            gpu_preprocessors.append(None)
 
         for i, (
             config,
@@ -155,8 +148,8 @@ class TabPFNEnsemblePreprocessor:
 
     def fit_transform_ensemble_members(
         self,
-        X_train: np.ndarray | torch.Tensor,
-        y_train: np.ndarray | torch.Tensor,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
         feature_schema: FeatureSchema,
     ) -> list[TabPFNEnsembleMember]:
         """Fit and transform the ensemble members."""

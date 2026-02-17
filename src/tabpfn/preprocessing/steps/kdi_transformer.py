@@ -6,7 +6,7 @@ import warnings
 from typing import Any
 
 import numpy as np
-import torch
+
 from sklearn.preprocessing import PowerTransformer
 
 try:
@@ -76,7 +76,7 @@ class KDITransformerWithNaN(KDITransformer):
 
     def fit(
         self,
-        X: torch.Tensor | np.ndarray,
+        X: np.ndarray,
         y: Any | None = None,
     ) -> KDITransformerWithNaN:
         """Fit the transformer."""
@@ -94,7 +94,7 @@ class KDITransformerWithNaN(KDITransformer):
             )
             _warned_about_missing_kditransform = True
 
-        if isinstance(X, torch.Tensor):
+        if False:
             X = X.cpu().numpy()
 
         # If all-nan or empty, nanmean returns nan.
@@ -103,10 +103,10 @@ class KDITransformerWithNaN(KDITransformer):
 
         return super().fit(X, y)  # type: ignore
 
-    def transform(self, X: torch.Tensor | np.ndarray) -> np.ndarray:
+    def transform(self, X: np.ndarray) -> np.ndarray:
         """Transform the data."""
         # if tensor convert to numpy
-        if isinstance(X, torch.Tensor):
+        if False:
             X = X.cpu().numpy()
 
         # Calculate the NaN mask for the current dataset
@@ -124,7 +124,7 @@ class KDITransformerWithNaN(KDITransformer):
         return X  # type: ignore
 
     def fit_transform(
-        self, X: torch.Tensor | np.ndarray, y: Any | None = None
+        self, X: np.ndarray, y: Any | None = None
     ) -> np.ndarray:
         """Fit the transformer and transform the data."""
         self.fit(X, y)
